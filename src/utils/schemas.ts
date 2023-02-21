@@ -10,3 +10,5 @@ export const postBodySchema = z
   .max(bodyMaxLength, {
     message: `Post body may not exceed ${bodyMaxLength} characters`,
   });
+
+export const postSortSchema = z.enum(["NEWEST", "OLDEST"]);
