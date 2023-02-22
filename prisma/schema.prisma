@@ -19,6 +19,8 @@ model User {
     username      String     @unique
     email         String?    @unique
     emailVerified DateTime?
+    createdAt     DateTime   @default(now())
+    updatedAt     DateTime   @updatedAt
     image         String?
     role          Role       @default(USER)
     theme         Theme      @default(DARK)
