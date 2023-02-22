@@ -19,6 +19,7 @@ export const postRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       const { prisma } = ctx;
+      const { prisma, session } = ctx;
       const { sortingMethod, cursorPostId } = input;
 
       const limit = 10;
@@ -30,6 +31,24 @@ export const postRouter = createTRPCRouter({
         cursor: { id: cursorPostId },
         orderBy: {
           createdAt: sortingMethod === "NEWEST" ? "desc" : "asc",
+        },
+        select: {
+          id: true,
+          user: {
+            select: {
+              displayName: true,
+              username: true,
+              image: true,
+            },
+          },
+          body: true,
+          // To check if the logged-in user has already liked the post
+          postLikes: !session
+            ? undefined
+            : {
+                where: { userId: session.user.id },
+              },
+          _count: { select: { postLikes: true } },
         },
       });
 
