@@ -13,55 +13,50 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model User {
-    id            String     @id @default(cuid())
-    displayName   String?
-    username      String     @unique
-    email         String?    @unique
-    emailVerified DateTime?
-    createdAt     DateTime   @default(now())
-    updatedAt     DateTime   @updatedAt
-    image         String?
-    role          Role       @default(USER)
-    theme         Theme      @default(DARK)
-    accounts      Account[]
-    sessions      Session[]
-    postLikes     PostLike[]
-    echoes        Echo[]
-    posts         Post[]
+model Profile {
+    id          String     @id @default(cuid())
+    displayName String?
+    username    String     @unique
+    createdAt   DateTime   @default(now())
+    updatedAt   DateTime   @updatedAt
+    userId      String     @unique
+    posts       Post[]
+    postLikes   PostLike[]
+    echoes      Echo[]
+    user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+    role        Role       @default(USER)
 }
 
 model Post {
     id        String     @id @default(cuid())
     body      String
     createdAt DateTime   @default(now())
-    // updatedAt DateTime   @updatedAt
-    userId    String
-    user      User       @relation(fields: [userId], references: [id])
+    authorId  String
+    author    Profile    @relation(fields: [authorId], references: [id], onDelete: Cascade)
     postLikes PostLike[]
     echoes    Echo[]
 }
 
 model PostLike {
-    id        String   @id @default(cuid())
-    createdAt DateTime @default(now())
-    postId    String
-    userId    String
-    post      Post     @relation(fields: [postId], references: [id])
-    user      User     @relation(fields: [userId], references: [id])
+    id          String   @id @default(cuid())
+    createdAt   DateTime @default(now())
+    likedPostId String
+    likerId     String
+    likedPost   Post     @relation(fields: [likedPostId], references: [id], onDelete: Cascade)
+    liker       Profile  @relation(fields: [likerId], references: [id], onDelete: Cascade)
 
-    @@unique([postId, userId])
+    @@unique([likedPostId, likerId])
 }
 
 model Echo {
-    id        String   @id @default(cuid())
-    createdAt DateTime @default(now())
-    postId    String
-    userId    String // The user Echoing someone else's post
-    post      Post     @relation(fields: [postId], references: [id])
-    user      User     @relation(fields: [userId], references: [id])
+    id           String   @id @default(cuid())
+    createdAt    DateTime @default(now())
+    echoedPostId String
+    echoerId     String // The profile Echoing someone else's post
+    echoedPost   Post     @relation(fields: [echoedPostId], references: [id])
+    echoer       Profile  @relation(fields: [echoerId], references: [id])
 
-    @@unique([postId, userId])
+    @@unique([echoedPostId, echoerId])
 }
 
 // TODO: Community
@@ -103,6 +98,17 @@ model Session {
     userId       String
     expires      DateTime
     user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+    id            String    @id @default(cuid())
+    name          String?
+    email         String?
+    emailVerified DateTime?
+    image         String?
+    accounts      Account[]
+    sessions      Session[]
+    profile       Profile?
 }
 
 model VerificationToken {
