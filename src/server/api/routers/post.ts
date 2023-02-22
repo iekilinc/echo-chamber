@@ -18,14 +18,13 @@ export const postRouter = createTRPCRouter({
       })
     )
     .query(async ({ ctx, input }) => {
-      const { prisma } = ctx;
       const { prisma, session } = ctx;
       const { sortingMethod, cursorPostId } = input;
 
       const limit = 10;
       const isFirstPage: boolean = cursorPostId === undefined;
 
-      const posts = await prisma.post.findMany({
+      const dbPosts = await prisma.post.findMany({
         take: limit + 1,
         skip: isFirstPage ? undefined : 1, // skip fetching the post acting as the cursor
         cursor: { id: cursorPostId },
@@ -51,6 +50,14 @@ export const postRouter = createTRPCRouter({
           _count: { select: { postLikes: true } },
         },
       });
+
+      const posts = dbPosts.map((p) => ({
+        id: p.id,
+        user: p.user,
+        body: p.body,
+        likeCount: p._count.postLikes,
+        alreadyLiked: p.postLikes && p.postLikes.length > 0,
+      }));
 
       let nextCursor: typeof cursorPostId;
       if (posts.length > limit) {
