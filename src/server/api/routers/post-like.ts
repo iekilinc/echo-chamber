@@ -21,14 +21,20 @@ export const postLikeRouter = createTRPCRouter({
     }),
 
   delete: protectedProcedure
-    .input(z.object({ postLikeId: idSchema }))
+    .input(
+      z.object({
+        postId: idSchema,
+        userId: idSchema,
+      })
+    )
     .mutation(async ({ ctx, input }) => {
       const { prisma } = ctx;
       const { user } = ctx.session;
+      const { postId, userId } = input;
 
       const postLike = await prisma.postLike.findUniqueOrThrow({
         where: {
-          id: input.postLikeId,
+          postId_userId: { postId, userId },
         },
         select: {
           id: true, // for error logging
