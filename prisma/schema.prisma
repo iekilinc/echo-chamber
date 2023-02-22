@@ -103,7 +103,7 @@ model Session {
 model User {
     id            String    @id @default(cuid())
     name          String?
-    email         String?
+    email         String    @unique // I have to make this a required field to be able to create a custom Next auth adapter
     emailVerified DateTime?
     image         String?
     accounts      Account[]
