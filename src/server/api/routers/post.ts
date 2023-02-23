@@ -28,33 +28,33 @@ export const postRouter = createTRPCRouter({
         take: limit + 1,
         skip: isFirstPage ? undefined : 1, // skip fetching the post acting as the cursor
         cursor: { id: cursorPostId },
-        orderBy: {
-          createdAt: sortingMethod === "NEWEST" ? "desc" : "asc",
-        },
+        orderBy: { createdAt: sortingMethod === "NEWEST" ? "desc" : "asc" },
         select: {
           id: true,
-          user: {
+          author: {
             select: {
               displayName: true,
               username: true,
-              image: true,
+              user: { select: { image: true } },
             },
           },
           body: true,
           // To check if the logged-in user has already liked the post
           postLikes: !session
             ? undefined
-            : {
-                where: { userId: session.user.id },
-              },
+            : { where: { likerId: session.profile.id } },
           _count: { select: { postLikes: true } },
         },
       });
 
       const posts = dbPosts.map((p) => ({
         id: p.id,
-        user: p.user,
         body: p.body,
+        author: {
+          displayName: p.author.displayName,
+          username: p.author.username,
+          image: p.author.user.image,
+        },
         likeCount: p._count.postLikes,
         alreadyLiked: p.postLikes && p.postLikes.length > 0,
       }));
@@ -75,11 +75,11 @@ export const postRouter = createTRPCRouter({
     .input(z.object({ body: postBodySchema }))
     .mutation(async ({ ctx, input }) => {
       const { prisma } = ctx;
-      const { user } = ctx.session;
+      const { profile } = ctx.session;
 
       const post = await prisma.post.create({
         data: {
-          userId: user.id,
+          authorId: profile.id,
           body: input.body,
         },
       });
@@ -91,28 +91,27 @@ export const postRouter = createTRPCRouter({
     .input(z.object({ postId: idSchema }))
     .mutation(async ({ ctx, input }) => {
       const { prisma } = ctx;
-      const { user } = ctx.session;
+      const { profile } = ctx.session;
 
       const post = await prisma.post.findUniqueOrThrow({
         where: {
           id: input.postId,
         },
         select: {
-          id: true, // for error logging
-          userId: true,
+          authorId: true,
         },
       });
 
-      if (user.id !== post.userId && user.role === "USER") {
+      if (profile.id !== post.authorId && profile.role === "USER") {
         throw new TRPCError({
           code: "UNAUTHORIZED",
-          message: `User ${user.id} does not have permissions to delete post ${post.id}`,
+          message: `User does not have permissions to delete post`,
         });
       }
 
       await prisma.post.delete({
         where: {
-          id: post.id,
+          id: input.postId,
         },
         select: {},
       });

@@ -9,43 +9,40 @@ export const postLikeRouter = createTRPCRouter({
     .input(z.object({ postId: idSchema }))
     .mutation(async ({ ctx, input }) => {
       const { prisma } = ctx;
-      const { user } = ctx.session;
+      const { profile } = ctx.session;
 
       await prisma.postLike.create({
         data: {
-          postId: input.postId,
-          userId: user.id,
+          likedPostId: input.postId,
+          likerId: profile.id,
         },
         select: {},
       });
     }),
 
   delete: protectedProcedure
-    .input(
-      z.object({
-        postId: idSchema,
-        userId: idSchema,
-      })
-    )
+    .input(z.object({ postId: idSchema }))
     .mutation(async ({ ctx, input }) => {
       const { prisma } = ctx;
-      const { user } = ctx.session;
-      const { postId, userId } = input;
+      const { profile } = ctx.session;
 
-      const postLike = await prisma.postLike.findUniqueOrThrow({
+      const postLike = await prisma.postLike.findUnique({
         where: {
-          postId_userId: { postId, userId },
+          likedPostId_likerId: {
+            likedPostId: input.postId,
+            likerId: profile.id,
+          },
         },
         select: {
-          id: true, // for error logging
-          userId: true,
+          id: true,
         },
       });
 
-      if (user.id !== postLike.userId && user.role === "USER") {
+      if (!postLike) {
         throw new TRPCError({
-          code: "UNAUTHORIZED",
-          message: `User ${user.id} does not have permissions to delete post like ${postLike.id}`,
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            "Could not satisfy request. The reason could be that the message does not exist or that it does but the user is not its creator",
         });
       }
 
