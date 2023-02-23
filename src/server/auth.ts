@@ -6,7 +6,7 @@ import {
 } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
 // import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { CustomPrismaAdapter } from "./prisma-adapter.js";
+import { CustomPrismaAdapter } from "./prisma-adapter";
 import { env } from "../env.mjs";
 import { prisma } from "./db";
 import type { PrismaClient, User } from "@prisma/client";
