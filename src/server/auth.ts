@@ -5,10 +5,26 @@ import {
   type DefaultSession,
 } from "next-auth";
 import DiscordProvider from "next-auth/providers/discord";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
+// import { PrismaAdapter } from "@next-auth/prisma-adapter";
+import { CustomPrismaAdapter } from "./prisma-adapter.js";
 import { env } from "../env.mjs";
 import { prisma } from "./db";
-import type { Role } from "@prisma/client";
+import type { PrismaClient, User } from "@prisma/client";
+import type { Session } from "next-auth";
+
+const getUserProfile = async (user: Pick<User, "id">, prisma: PrismaClient) => {
+  const profile = await prisma.profile.findUnique({
+    where: { userId: user.id },
+    select: {
+      id: true,
+      displayName: true,
+      username: true,
+      role: true,
+    },
+  });
+  return profile;
+};
+type Profile = Awaited<ReturnType<typeof getUserProfile>>;
 
 /**
  * Module augmentation for `next-auth` types.
@@ -21,15 +37,15 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
-      role: Role; // ?
-      // ...other properties
     } & DefaultSession["user"];
+    profile: Profile & Pick<Session["user"], "image">;
+    // ... other properties
   }
 
-  interface User {
-    role: Role; // ?
-    // ...other properties
-  }
+  // interface User {
+  //   role: string; // ?
+  //   // ... other properties
+  // }
 }
 
 /**
@@ -40,16 +56,21 @@ declare module "next-auth" {
  **/
 export const authOptions: NextAuthOptions = {
   callbacks: {
-    session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id;
-        session.user.role = user.role; // ?
-        // ... put other properties on the session here
-      }
+    async session({ session, user }) {
+      if (!session.user) return session;
+      const profile = await getUserProfile(user, prisma);
+      if (!profile) return session;
+
+      session.profile = {
+        ...profile,
+      } satisfies Session["profile"];
+      session.user.id = user.id;
+      // ... put other properties on the session here
+
       return session;
     },
   },
-  adapter: PrismaAdapter(prisma),
+  adapter: CustomPrismaAdapter(prisma),
   providers: [
     DiscordProvider({
       clientId: env.DISCORD_CLIENT_ID,
@@ -61,6 +82,9 @@ export const authOptions: NextAuthOptions = {
      * @see https://next-auth.js.org/providers/github
      **/
   ],
+  pages: {
+    signIn: "/auth/signin",
+  },
 };
 
 /**
