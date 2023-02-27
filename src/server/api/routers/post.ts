@@ -14,12 +14,12 @@ export const postRouter = createTRPCRouter({
     .input(
       z.object({
         sortingMethod: postSortSchema.default("NEWEST"),
-        cursorPostId: idSchema.optional(),
+        cursor: idSchema.optional(),
       })
     )
     .query(async ({ ctx, input }) => {
       const { prisma, session } = ctx;
-      const { sortingMethod, cursorPostId } = input;
+      const { sortingMethod, cursor: cursorPostId } = input;
 
       const limit = 10;
       const isFirstPage: boolean = cursorPostId === undefined;
