@@ -93,27 +93,23 @@ export const postRouter = createTRPCRouter({
       const { prisma } = ctx;
       const { profile } = ctx.session;
 
-      const post = await prisma.post.findUniqueOrThrow({
+      // As only one can ever have input.postId, we know that this will delete
+      // only one post if it succeeds
+      const deletedPosts = await prisma.post.deleteMany({
         where: {
           id: input.postId,
-        },
-        select: {
-          authorId: true,
+          // To uncomment when roles are implemented again
+          // OR: [{
+          authorId: profile.id,
+          // }, { role: "MODERATOR"}]
         },
       });
 
-      if (profile.id !== post.authorId && profile.role === "USER") {
+      if (deletedPosts.count < 1) {
         throw new TRPCError({
           code: "UNAUTHORIZED",
           message: `User does not have permissions to delete post`,
         });
       }
-
-      await prisma.post.delete({
-        where: {
-          id: input.postId,
-        },
-        select: {},
-      });
     }),
 });
