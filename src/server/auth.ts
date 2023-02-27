@@ -62,6 +62,7 @@ export const authOptions: NextAuthOptions = {
 
       session.profile = {
         ...profile,
+        image: session.user.image,
       } satisfies Session["profile"];
       session.user.id = user.id;
       // ... put other properties on the session here
