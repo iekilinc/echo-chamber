@@ -14,7 +14,7 @@ export function CustomPrismaAdapter(p: PrismaClient): Adapter {
       const isUnique = async (username: string) => {
         const dbRes = await p.profile.findUnique({
           where: { username },
-          select: {},
+          select: { id: true },
         });
         return dbRes === null;
       };
@@ -34,11 +34,7 @@ export function CustomPrismaAdapter(p: PrismaClient): Adapter {
             },
           },
         },
-        select: {
-          id: true,
-          email: true,
-          emailVerified: true,
-        },
+        include: { profile: true },
       });
 
       return dbUser;
