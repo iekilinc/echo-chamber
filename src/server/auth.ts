@@ -19,7 +19,6 @@ const getUserProfile = async (user: Pick<User, "id">, prisma: PrismaClient) => {
       id: true,
       displayName: true,
       username: true,
-      role: true,
     },
   });
   return profile;
