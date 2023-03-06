@@ -11,13 +11,15 @@ export const postLikeRouter = createTRPCRouter({
       const { prisma } = ctx;
       const { profile } = ctx.session;
 
-      await prisma.postLike.create({
+      const likedPost = await prisma.postLike.create({
         data: {
           likedPostId: input.postId,
           likerId: profile.id,
         },
-        select: {},
+        select: { likedPostId: true },
       });
+
+      return likedPost;
     }),
 
   delete: protectedProcedure
@@ -33,9 +35,7 @@ export const postLikeRouter = createTRPCRouter({
             likerId: profile.id,
           },
         },
-        select: {
-          id: true,
-        },
+        select: { id: true },
       });
 
       if (!postLike) {
@@ -46,11 +46,11 @@ export const postLikeRouter = createTRPCRouter({
         });
       }
 
-      await prisma.postLike.delete({
-        where: {
-          id: postLike.id,
-        },
-        select: {},
+      const deletedPost = await prisma.postLike.delete({
+        where: { id: postLike.id },
+        select: { likedPostId: true },
       });
+
+      return deletedPost;
     }),
 });
