@@ -49,7 +49,7 @@ export const Post: React.FC<{
     likeState === "NOT_LIKED" ? HeartIconOutline : HeartIconSolid;
 
   return (
-    <article className="flex gap-3 border-gray-600 bg-gray-800 px-2 pt-3 overflow-hidden">
+    <article className="flex gap-3 overflow-hidden border-gray-600 bg-gray-800 px-2 pt-3 w-full">
       <Image
         // apple-touch-icon.png is 180x180 px
         src={author.image ?? "http://localhost:3000/apple-touch-icon.png"}
