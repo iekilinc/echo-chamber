@@ -48,7 +48,7 @@ export const Post: React.FC<{
     likeState === "NOT_LIKED" ? HeartIconOutline : HeartIconSolid;
 
   return (
-    <article className="flex gap-3 border-y border-neutral-800 bg-[#111] px-3 pt-3">
+    <article className="flex gap-3 border-gray-600 bg-gray-800 px-2 pt-3 overflow-hidden">
       <Image
         // apple-touch-icon.png is 180x180 px
         src={author.image ?? "http://localhost:3000/apple-touch-icon.png"}
@@ -59,21 +59,21 @@ export const Post: React.FC<{
       />
       <div className="flex w-full flex-col">
         <div className="flex justify-between">
-          <div className="flex gap-1.5">
-            <h3 className="font-bold text-white">
+          <div className="flex gap-1.5 overflow-hidden">
+            <h3 className="whitespace-nowrap font-bold text-gray-50">
               {author.displayName ? author.displayName : `@${author.username}`}
             </h3>
             {author.displayName && (
-              <span className=" text-[0.95rem] text-neutral-400">
+              <span className=" text-[0.95rem] text-gray-400">
                 @{author.username}
               </span>
             )}
           </div>
-          <div className="place-self-center text-sm text-neutral-400">
+          <div className="place-self-center text-sm text-gray-400">
             {createdAt.toLocaleDateString()}
           </div>
         </div>
-        <main className="mb-1 leading-snug text-neutral-200">{body}</main>
+        <main className="mb-1 leading-snug text-gray-200">{body}</main>
         <div className="mb-1 flex gap-0.5">
           <button
             onClick={() => {
