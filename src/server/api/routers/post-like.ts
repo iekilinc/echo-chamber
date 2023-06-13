@@ -28,29 +28,24 @@ export const postLikeRouter = createTRPCRouter({
       const { prisma } = ctx;
       const { profile } = ctx.session;
 
-      const postLike = await prisma.postLike.findUnique({
-        where: {
-          likedPostId_likerId: {
-            likedPostId: input.postId,
-            likerId: profile.id,
+      let postLike: { likedPostId: string };
+      try {
+        postLike = await prisma.postLike.delete({
+          where: {
+            likedPostId_likerId: {
+              likedPostId: input.postId,
+              likerId: profile.id,
+            },
           },
-        },
-        select: { id: true },
-      });
-
-      if (!postLike) {
+          select: { likedPostId: true },
+        });
+      } catch (e) {
         throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message:
-            "Could not satisfy request. The reason could be that the message does not exist or that it does but the user is not its creator",
+          code: "UNAUTHORIZED",
+          message: "You are not authorized to perform this operation",
         });
       }
 
-      const deletedPost = await prisma.postLike.delete({
-        where: { id: postLike.id },
-        select: { likedPostId: true },
-      });
-
-      return deletedPost;
+      return postLike;
     }),
 });
