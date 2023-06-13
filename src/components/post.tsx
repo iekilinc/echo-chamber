@@ -83,7 +83,7 @@ export const Post: React.FC<{
               if (likeState === "CHANGING") return;
               const mutation =
                 likeState === "LIKED" ? unlikeMutation : likeMutation;
-              return mutation.mutateAsync({ postId: id });
+              return void mutation.mutateAsync({ postId: id });
             }}
           >
             <LikeIcon
