@@ -38,6 +38,7 @@ export const postRouter = createTRPCRouter({
               user: { select: { image: true } },
             },
           },
+          createdAt: true,
           body: true,
           // To check if the logged-in user has already liked the post
           postLikes: !session
@@ -55,6 +56,7 @@ export const postRouter = createTRPCRouter({
           username: p.author.username,
           image: p.author.user.image,
         },
+        createdAt: p.createdAt,
         likeCount: p._count.postLikes,
         alreadyLiked: p.postLikes && p.postLikes.length > 0,
       }));
