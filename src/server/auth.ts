@@ -67,6 +67,7 @@ export const authOptions: NextAuthOptions = {
       session.user.id = user.id;
       // ... put other properties on the session here
 
+      console.log("session()", { session });
       return session;
     },
   },
