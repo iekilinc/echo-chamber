@@ -1,6 +1,7 @@
 import type { PrismaClient, Prisma } from "@prisma/client";
 import type { Adapter, AdapterAccount } from "next-auth/adapters";
 import { generateRandomUsername } from "../utils/random-name";
+import { usernameSchema } from "../utils/schemas";
 
 /**
  * Custom adapter that supports the "Profile" model we created in the prisma
@@ -19,18 +20,36 @@ export function CustomPrismaAdapter(p: PrismaClient): Adapter {
         return dbRes === null;
       };
 
-      let uniqueUsername: string;
-      do {
-        uniqueUsername = generateRandomUsername();
-      } while (!(await isUnique(uniqueUsername)));
-      const randomUniqueUsername = uniqueUsername;
+      let uniqueUsername: string | undefined;
+
+      // If the OAuth provider provided a name, use the name if it's unique
+      // else, create a 4-decimal-digit discriminator and add it to the name
+      const safeChars = user.name?.match(/[a-zA-Z0-9_]/g)?.join("");
+      if (safeChars) {
+        let discriminator: string;
+        let username: string;
+        do {
+          discriminator = Math.random().toPrecision(4).substring(2);
+          username = safeChars + discriminator;
+        } while (!(await isUnique(username)));
+        const parsed = usernameSchema.safeParse(username);
+        uniqueUsername = parsed.success ? parsed.data : undefined;
+      }
+      
+      if (uniqueUsername === undefined) {
+        let username: string;
+        do {
+          username = generateRandomUsername();
+        } while (!(await isUnique(username)));
+        uniqueUsername = username;
+      }
 
       const dbUser = await p.user.create({
         data: {
           ...user,
           profile: {
             create: {
-              username: randomUniqueUsername,
+              username: uniqueUsername,
             },
           },
         },
@@ -83,7 +102,7 @@ export function CustomPrismaAdapter(p: PrismaClient): Adapter {
           },
         },
       });
-      if (!userAndSession) return null;
+      if (!userAndSession || !userAndSession.user.profile) return null;
       const { user, ...session } = userAndSession;
       const { profile } = user;
       const userSansProfile = { ...user, profile: undefined };
