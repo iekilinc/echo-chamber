@@ -24,6 +24,7 @@ export const postRouter = createTRPCRouter({
       const limit = 10;
       const isFirstPage: boolean = cursorPostId === undefined;
 
+      console.log("fetching posts...");
       const dbPosts = await prisma.post.findMany({
         take: limit + 1,
         skip: isFirstPage ? undefined : 1, // skip fetching the post acting as the cursor
