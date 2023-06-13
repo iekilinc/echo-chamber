@@ -28,6 +28,10 @@ const config = {
         hostname: "cloudflare-ipfs.com",
       },
       { hostname: "localhost" },
+      {
+        protocol: "https",
+        hostname: "cdn.discordapp.com",
+      },
     ],
   },
 };
