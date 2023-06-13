@@ -13,13 +13,14 @@ export const postRouter = createTRPCRouter({
   getScrolling: publicProcedure
     .input(
       z.object({
+        authorId: idSchema.optional(),
         sortingMethod: postSortSchema.default("NEWEST"),
         cursor: idSchema.optional(),
       })
     )
     .query(async ({ ctx, input }) => {
       const { prisma, session } = ctx;
-      const { sortingMethod, cursor: cursorPostId } = input;
+      const { sortingMethod, cursor: cursorPostId, authorId } = input;
 
       const limit = 10;
       const isFirstPage: boolean = cursorPostId === undefined;
@@ -27,8 +28,8 @@ export const postRouter = createTRPCRouter({
       console.log("fetching posts...");
       const dbPosts = await prisma.post.findMany({
         take: limit + 1,
-        skip: isFirstPage ? undefined : 1, // skip fetching the post acting as the cursor
-        cursor: { id: cursorPostId },
+        skip: !cursorPostId ? undefined : 1, // skip fetching the post acting as the cursor
+        cursor: !cursorPostId ? undefined : { id: cursorPostId },
         orderBy: { createdAt: sortingMethod === "NEWEST" ? "desc" : "asc" },
         select: {
           id: true,
@@ -47,6 +48,7 @@ export const postRouter = createTRPCRouter({
             : { where: { likerId: session.profile.id } },
           _count: { select: { postLikes: true } },
         },
+        where: !authorId ? undefined : { authorId },
       });
 
       const posts = dbPosts.map((p) => ({
@@ -108,28 +110,6 @@ export const postRouter = createTRPCRouter({
       },
     });
 
-    // const dbPosts = await prisma.post.findMany({
-    //   take: 30,
-    //   orderBy: { createdAt: "desc" },
-    //   select: {
-    //     id: true,
-    //     author: {
-    //       select: {
-    //         displayName: true,
-    //         username: true,
-    //         user: { select: { image: true } },
-    //       },
-    //     },
-    //     body: true,
-    //     // To check if the logged-in user has already liked the post
-    //     postLikes: !session
-    //       ? undefined
-    //       : { where: { likerId: session.profile.id } },
-    //     _count: { select: { postLikes: true } },
-    //   },
-    // });
-
-    // const posts = dbUniqueAuthorPosts.map((p) => {
     const posts = dbUniqueAuthorPosts.flatMap((author) =>
       author.posts.map((p) => ({
         id: p.id,
