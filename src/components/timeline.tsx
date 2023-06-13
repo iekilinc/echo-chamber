@@ -15,7 +15,7 @@ const Timeline: React.FC = () => {
   console.log({ session });
 
   return (
-    <main className="mx-auto flex max-w-lg flex-col py-4 sm:max-w-2xl">
+    <main className="flex flex-col gap-[1px] bg-gray-600">
       {postQuery.isLoading && <h1>Loading</h1>}
       {postQuery.error && <h1>{JSON.stringify(postQuery.error)}</h1>}
       {/* {postQuery.data &&
