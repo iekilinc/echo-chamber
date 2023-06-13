@@ -5,6 +5,7 @@ import HeartIconOutline from "@heroicons/react/24/outline/HeartIcon";
 import HeartIconSolid from "@heroicons/react/24/solid/HeartIcon";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
+import Link from "next/link";
 
 export const Post: React.FC<{
   post: RouterOutputs["post"]["getScrolling"]["posts"][number];
@@ -59,7 +60,10 @@ export const Post: React.FC<{
       />
       <div className="flex w-full flex-col">
         <div className="flex justify-between">
-          <div className="flex gap-1.5 overflow-hidden">
+          <Link
+            href={`/profile/${author.username}`}
+            className="flex gap-1.5 overflow-hidden"
+          >
             <h3 className="whitespace-nowrap font-bold text-gray-50">
               {author.displayName ? author.displayName : `@${author.username}`}
             </h3>
@@ -68,7 +72,7 @@ export const Post: React.FC<{
                 @{author.username}
               </span>
             )}
-          </div>
+          </Link>
           <div className="place-self-center text-sm text-gray-400">
             {createdAt.toLocaleDateString()}
           </div>
