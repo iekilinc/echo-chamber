@@ -26,16 +26,16 @@ export function CustomPrismaAdapter(p: PrismaClient): Adapter {
       // else, create a 4-decimal-digit discriminator and add it to the name
       const safeChars = user.name?.match(/[a-zA-Z0-9_]/g)?.join("");
       if (safeChars) {
-        let discriminator: string;
-        let username: string;
-        do {
+        let username = safeChars;
+        let discriminator: string | undefined;
+        while (!(await isUnique(username))) {
           discriminator = Math.random().toPrecision(4).substring(2);
           username = safeChars + discriminator;
-        } while (!(await isUnique(username)));
+        }
         const parsed = usernameSchema.safeParse(username);
         uniqueUsername = parsed.success ? parsed.data : undefined;
       }
-      
+
       if (uniqueUsername === undefined) {
         let username: string;
         do {
