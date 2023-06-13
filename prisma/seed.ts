@@ -12,7 +12,7 @@ const randBool = () => faker.datatype.boolean();
 
 const run = async () => {
   const userData = Array(USERS_TO_CREATE)
-    .fill(null)
+    .fill(undefined)
     .map(() => {
       const gender = randBool() ? "male" : "female";
       const firstName = faker.name.firstName(gender);
@@ -30,12 +30,13 @@ const run = async () => {
             randBool() ? firstName : undefined,
             randBool() ? lastName : undefined
           )
-          .toLocaleLowerCase(),
+          .toLowerCase(),
         image:
           faker.datatype.number({ min: 0, max: 99 }) > 2
             ? faker.image.avatar()
             : undefined,
-      };
+        createdAt: faker.date.between("2020-01-01T00:00:00.000Z", new Date()),
+      } as const;
     });
 
   console.log(userData);
@@ -49,6 +50,7 @@ const run = async () => {
           create: {
             displayName: randBool() ? user.fullName : undefined,
             username: user.username,
+            createdAt: user.createdAt,
           },
         },
         image: user.image,
@@ -69,19 +71,26 @@ const run = async () => {
       posts.push({
         body: faker.lorem.sentence(),
         authorId: user.profile!.id,
-      });
+        createdAt: faker.date.between(user.profile!.createdAt, new Date()),
+      } as const);
     }
   }
 
   console.log(posts);
 
-  const createPosts = posts.map((post) => prisma.post.create({ data: post }));
+  const createPosts = posts.map((post) =>
+    prisma.post.create({
+      data: {
+        body: post.body,
+        authorId: post.authorId,
+        createdAt: post.createdAt,
+      },
+    })
+  );
 
   const createdPosts = await prisma.$transaction(createPosts);
 
   console.log(createdPosts);
-
-  await prisma.$disconnect();
 };
 
-void run();
+void run().finally(() => void prisma.$disconnect());
